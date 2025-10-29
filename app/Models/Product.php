@@ -13,4 +13,10 @@ class Product extends Model
         'stock',
         'description'
     ];
+
+    // Relationship with Category
+    public function category()
+    {
+        return $this->belongsTo(Category::class);
+    }
 }

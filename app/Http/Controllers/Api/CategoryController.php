@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http\Controllers\Api;
+
 use App\Http\Controllers\Controller;
 use App\Models\Category;
 use Illuminate\Http\Request;
@@ -56,14 +57,13 @@ class CategoryController extends Controller
 	}
 
 
-	public function update(Request $request, Category $category, string $id)
+	public function update(Request $request, string $id)
 	{
 		try {
 			$category = Category::find($id);
 			$category->name = $request->name;
 			$category->description = $request->description;
 			date_default_timezone_set("Asia/Dhaka");
-			$category->created_at = date('Y-m-d H:i:s');
 			date_default_timezone_set("Asia/Dhaka");
 			$category->updated_at = date('Y-m-d H:i:s');
 
@@ -75,7 +75,7 @@ class CategoryController extends Controller
 		}
 	}
 
-	public function destroy(Category $category, string $id)
+	public function destroy(string $id)
 	{
 		try {
 			$category = Category::destroy($id);

@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http\Controllers\Api;
+
 use App\Http\Controllers\Controller;
 use App\Models\Customer;
 use Illuminate\Http\Request;
@@ -56,7 +57,7 @@ class CustomerController extends Controller
 		}
 	}
 
-	public function update(Request $request, Customer $customer, string $id)
+	public function update(Request $request, string $id)
 	{
 		try {
 
@@ -70,10 +71,6 @@ class CustomerController extends Controller
 			$customer->phone = $request->phone;
 			$customer->email = $request->email;
 			$customer->address = $request->address;
-			date_default_timezone_set("Asia/Dhaka");
-			$customer->created_at = date('Y-m-d H:i:s');
-			date_default_timezone_set("Asia/Dhaka");
-			$customer->updated_at = date('Y-m-d H:i:s');
 
 			$customer->save();
 
@@ -83,7 +80,7 @@ class CustomerController extends Controller
 		}
 	}
 
-	public function destroy(Customer $customer, string $id)
+	public function destroy(string $id)
 	{
 		try {
 			$customer = Customer::destroy($id);

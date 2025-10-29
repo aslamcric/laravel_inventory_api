@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http\Controllers\Api;
+
 use App\Http\Controllers\Controller;
 use App\Models\Supplier;
 use Illuminate\Http\Request;
@@ -57,8 +58,7 @@ class SupplierController extends Controller
 		}
 	}
 
-
-	public function update(Request $request, Supplier $supplier, string $id)
+	public function update(Request $request, string $id)
 	{
 		try {
 			$supplier = Supplier::find($id);
@@ -72,16 +72,12 @@ class SupplierController extends Controller
 			$supplier->company = $request->company;
 			$supplier->email = $request->email;
 			$supplier->address = $request->address;
-			date_default_timezone_set("Asia/Dhaka");
-			$supplier->created_at = date('Y-m-d H:i:s');
-			date_default_timezone_set("Asia/Dhaka");
-			$supplier->updated_at = date('Y-m-d H:i:s');
 
 			$supplier->save();
 
 			return response()->json(['supplier' => $supplier]);
 		} catch (\Throwable $th) {
-			return response()->json(['error' => $th->getMessage()]);
+			return response()->json(['error' => $th->getMessage()], 500);
 		}
 	}
 

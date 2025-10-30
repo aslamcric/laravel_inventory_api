@@ -4,58 +4,95 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Purchase;
+use App\Models\PurchaseDetail;
+use App\Models\Supplier;
 use App\Models\Product;
+use App\Models\Stock;
 use Illuminate\Http\Request;
 
 class PurchaseController extends Controller
 {
+    // Show all purchases with supplier data
+    public function allPurchaseIndex(Request $request)
+    {
+        $query = Purchase::with('suppliers');
+
+        if ($request->search) {
+            $query->whereHas('suppliers', function ($q) use ($request) {
+                $q->where('name', 'like', "%{$request->search}%");
+            });
+        }
+
+        return response()->json($query->paginate(5));
+    }
+
+    // Load supplier & product lists for form
     public function index()
     {
-        return Purchase::with(['supplier', 'product'])->latest()->get();
+        try {
+            $suppliers = Supplier::all();
+            $products = Product::all();
+            return response()->json(compact('suppliers', 'products'));
+        } catch (\Throwable $th) {
+            return response()->json(["error" => $th->getMessage()]);
+        }
     }
 
-    public function store(Request $request)
+    // Process a new purchase
+    public function process(Request $request)
     {
-        $purchase = Purchase::create($request->all());
+        try {
+            $purchase = new Purchase();
+            $purchase->supplier_id = $request->supplier['id'];
+            $purchase->purchase_date = now();
+            $purchase->invoice_no = 'INV-' . time();
+            $purchase->total_amount = $request->order_total;
+            $purchase->paid_amount = $request->paid_amount ?? $request->order_total;
+            $purchase->remark = $request->remark ?? '';
+            $purchase->discount = $request->discount;
+            $purchase->vat = $request->vat;
+            $purchase->status = 1;
+            $purchase->save();
 
-        // Automatically update product stock
-        $product = Product::find($request->product_id);
-        $product->stock += $request->quantity;
-        $product->save();
+            $last_id = $purchase->id;
 
-        return response()->json(['message' => 'Purchase added successfully', 'purchase' => $purchase]);
+            foreach ($request->products as $product) {
+                // Purchase Detail
+                $detail = new PurchaseDetail();
+                $detail->purchase_id = $last_id;
+                $detail->product_id = $product['item_id'];
+                $detail->qty = $product['qty'];
+                $detail->price = $product['price'];
+                $detail->vat = $request->vat;
+                $detail->discount = $product['discount'] ?? 0;
+                $detail->save();
+
+                // Update Stock
+                $stock = Stock::firstOrCreate(
+                    ['product_id' => $product['item_id']],
+                    ['qty' => 0]
+                );
+                $stock->qty += $product['qty'];
+                $stock->save();
+            }
+
+            return response()->json(["success" => true, "purchase_id" => $last_id]);
+        } catch (\Throwable $th) {
+            return response()->json(["error" => $th->getMessage()]);
+        }
     }
 
-    public function show(Purchase $purchase)
+    // Show one purchase with details
+    public function show($id)
     {
-        return $purchase->load(['supplier', 'product']);
-    }
+        try {
+            $purchase = Purchase::with(['purchase_details', 'suppliers', 'purchase_details.products'])
+                ->where("id", $id)
+                ->first();
 
-    public function update(Request $request, Purchase $purchase)
-    {
-        // If quantity changed, update product stock
-        $product = Product::find($purchase->product_id);
-        $product->stock -= $purchase->quantity; // subtract old quantity
-        $product->save();
-
-        $purchase->update($request->all());
-
-        $newProduct = Product::find($request->product_id);
-        $newProduct->stock += $request->quantity; // add new quantity
-        $newProduct->save();
-
-        return response()->json(['message' => 'Purchase updated successfully', 'purchase' => $purchase]);
-    }
-
-    public function destroy(Purchase $purchase)
-    {
-        // Reduce stock before deleting
-        $product = Product::find($purchase->product_id);
-        $product->stock -= $purchase->quantity;
-        $product->save();
-
-        $purchase->delete();
-
-        return response()->json(['message' => 'Purchase deleted successfully']);
+            return response()->json(['purchase' => $purchase]);
+        } catch (\Throwable $th) {
+            return response()->json(["error" => $th->getMessage()]);
+        }
     }
 }

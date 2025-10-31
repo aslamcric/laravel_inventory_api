@@ -8,9 +8,11 @@ use App\Http\Controllers\Api\CustomerController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\OrderDetailController;
+use App\Http\Controllers\Api\OrderReportController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\PurchaseController;
 use App\Http\Controllers\Api\PurchaseDetailController;
+use App\Http\Controllers\Api\PurchaseReportController;
 use App\Http\Controllers\Api\StockController;
 use App\Http\Controllers\Api\SupplierController;
 
@@ -26,7 +28,6 @@ Route::post('/login', [AuthController::class, 'login']);
 // Protected routes
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
-
 });
 // Category
 Route::apiResource('categories', CategoryController::class);
@@ -60,3 +61,9 @@ Route::get('/stocks', [StockController::class, 'index']);
 // Dashboard
 Route::get('/dashboardData', [DashboardController::class, 'getDashboardData']);
 
+// Report
+Route::get('orderReport/data', [OrderReportController::class, 'index']);
+Route::post('orderReport', [OrderReportController::class, 'orderReport']);
+
+Route::get('/purchaseReport/data', [PurchaseReportController::class, 'index']);
+Route::post('/purchaseReport', [PurchaseReportController::class, 'purchaseReport']);

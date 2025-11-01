@@ -15,6 +15,7 @@ use App\Http\Controllers\Api\PurchaseDetailController;
 use App\Http\Controllers\Api\PurchaseReportController;
 use App\Http\Controllers\Api\StockController;
 use App\Http\Controllers\Api\SupplierController;
+use App\Http\Controllers\Api\UserController;
 
 // Public routes
 Route::post('/register', [AuthController::class, 'register']);
@@ -28,6 +29,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', function (Request $request) {
         return $request->user();
     });
+
+    // User
+    Route::get('/allUser', [UserController::class, 'index']);
+    // Route::delete('/users/{id}', [UserController::class, 'destroy']);
 
     // Category
     Route::apiResource('categories', CategoryController::class);
